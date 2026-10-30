@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Box, ButtonBase, Typography } from '@mui/material'
-import { motion, useInView } from 'motion/react'
+import { motion } from 'motion/react'
 import useHoverReveal from '../hooks/useHoverReveal'
 import useElementWidth from '../hooks/useElementWidth'
 import { useCompact } from '../hooks/useMedia'
@@ -19,6 +19,9 @@ const IMAGE_HEIGHT = 223
 // The outer cards sit at the container edge, so fanned fruit is nudged
 // to stay this far inside the viewport instead of being cut off.
 const SCREEN_MARGIN = 16
+
+// Card width in the phone/tablet carousel (viewport-based so the track can centre it)
+const CAROUSEL_CARD = { xs: '72vw', sm: '42vw' }
 
 // Clamp a fruit's fanned-out x (card units) to the visible range. `bleed` is the share of
 // a fruit allowed past that edge, so it still reads as fanning out.
@@ -39,13 +42,11 @@ const keepOnScreen = (placement, bounds, bleed) =>
 // Compare the two band edges with ?edge=wave. Drop once one is chosen.
 const EDGE = new URLSearchParams(window.location.search).get('edge') === 'wave' ? 'wave' : 'straight'
 
-function RoastCard({ roast, carousel }) {
+function RoastCard({ roast, carousel, open, onTap }) {
   const { active: revealed, handlers } = useHoverReveal()
   const [ref, width] = useElementWidth()
-  // In the phone/tablet carousel the card plays its fruit and farmer reveal once it's
-  // (almost) fully in view, i.e. after it snaps into place
-  const inView = useInView(ref, { root: carousel, amount: 0.85 })
-  const active = revealed || (Boolean(carousel) && inView)
+  // In the phone/tablet carousel the parent decides which card is open (tap to toggle)
+  const active = carousel ? open : revealed
   const scale = width ? width / CARD_WIDTH : 1
   const [bounds, setBounds] = useState(null)
 
@@ -63,14 +64,25 @@ function RoastCard({ roast, carousel }) {
       ref={ref}
       tabIndex={0}
       aria-label={`${roast.series}: ${roast.fullName}, ${roast.price} USD`}
-      {...handlers}
+      {...(carousel
+        ? {
+            role: 'button',
+            'aria-expanded': open,
+            onClick: onTap,
+            onKeyDown: (e) => {
+              if (e.key !== 'Enter' && e.key !== ' ') return
+              e.preventDefault()
+              onTap()
+            },
+          }
+        : handlers)}
       sx={{
         position: 'relative',
         // Lift the hovered card's stacking context so its fruit clears neighbours
         zIndex: active ? 2 : 1,
         outline: 'none',
-        // Carousel: one card ~72% of a phone (two and a peek on tablets), snapping to centre
-        ...(carousel && { flex: '0 0 auto', width: { xs: '72%', sm: '42%' }, scrollSnapAlign: 'center' }),
+        // Carousel: one card ~72% of the screen on phones (42% on tablets), snapping to centre
+        ...(carousel && { flex: '0 0 auto', width: CAROUSEL_CARD, scrollSnapAlign: 'center', cursor: 'pointer' }),
       }}
     >
       {/* Tasting notes live behind the card and fan out on hover */}
@@ -211,13 +223,17 @@ export default function MonthlyRoasts() {
   const compact = useCompact()
   const track = useRef(null)
   const [current, setCurrent] = useState(0)
+  const [openId, setOpenId] = useState(null) // carousel only: the card showing its fruit and farmer
 
   // The card whose centre is closest to the carousel's centre
   const onScroll = () => {
     const t = track.current
     const mid = t.scrollLeft + t.clientWidth / 2
     const distances = [...t.children].map((c) => Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid))
-    setCurrent(distances.indexOf(Math.min(...distances)))
+    const nearest = distances.indexOf(Math.min(...distances))
+    setCurrent(nearest)
+    // Swiping another card into the centre closes the open one
+    if (roasts[nearest].id !== openId) setOpenId(null)
   }
 
   const scrollToCard = (i) => {
@@ -268,16 +284,23 @@ export default function MonthlyRoasts() {
             gap: 4,
             overflowX: 'auto',
             scrollSnapType: 'x mandatory',
-            px: { xs: `${layout.gutterPhone}px`, sm: `${layout.gutterTablet}px` },
-            scrollPaddingInline: { xs: `${layout.gutterPhone}px`, sm: `${layout.gutterTablet}px` },
+            // Padding of half the leftover width centres the first and last cards too
+            px: { xs: `calc((100vw - ${CAROUSEL_CARD.xs}) / 2)`, sm: `calc((100vw - ${CAROUSEL_CARD.sm}) / 2)` },
             pt: '88px',
             pb: 3,
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
           }}
         >
-          {roasts.map((roast) => (
-            <RoastCard key={roast.id} roast={roast} carousel={track} />
+          {roasts.map((roast, i) => (
+            <RoastCard
+              key={roast.id}
+              roast={roast}
+              carousel
+              open={openId === roast.id}
+              // Tap the centred card to open or close it; tapping a side card brings it to the centre first
+              onTap={() => (i === current ? setOpenId((id) => (id === roast.id ? null : roast.id)) : scrollToCard(i))}
+            />
           ))}
         </Box>
       )}
