@@ -1,27 +1,33 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Box, Link, Typography } from '@mui/material'
 import { motion, useReducedMotion } from 'motion/react'
 import { series } from '../data/series'
 import Container from './common/Container'
+import { useCompact } from '../hooks/useMedia'
 import { layout, motion as m } from '../theme/tokens'
 
-// 5 bars at ~109px resting height + 4 × 16px gaps
-const ROW_HEIGHT = 609
-const EXPANDED_GROW = 2.5
-// Height of the name strip; equals a collapsed bar (~84px) so names sit centred there.
-const HEADER_HEIGHT = 84
-// Fixed so text never reflows while the bar resizes; the bar clips it.
-const CONTENT_WIDTH = 560
-// Open bar: name and description scale up ~12%
+// Desktop: 5 bars at ~109px resting height + 4 × 16px gaps.
+// Compact (phones/tablets): one bar is always open by default, so the open bar gets a
+// bigger share (≈288px) and the closed ones settle at ~64px.
+const SIZES = {
+  desktop: { rowHeight: 609, gap: 16, grow: 2.5, header: 84, inset: 16, descGrow: 1.12 },
+  // Description isn't scaled here: it fills the bar's width and would be clipped
+  compact: { rowHeight: 592, gap: 12, grow: 4.5, header: 64, inset: 8, descGrow: 1 },
+}
+// Desktop text is fixed-width so it never reflows while the bar resizes; the bar clips it.
+// On phones it follows the bar's width (the open bar's width doesn't animate there).
+const CONTENT = { left: { xs: 20, md: 40 }, width: { xs: 'calc(100% - 40px)', md: 560 } }
+// Open bar: the series name scales up ~12%
 const TEXT_GROW = 1.12
-// How far the other bars step in at each side while one is open
-const SIDE_INSET = 16
 
 // One open bar at a time. Mouse opens on enter and only closes when the pointer
 // leaves the whole stack, so crossing the gaps between bars never snaps back.
 // Touch toggles on tap; keyboard focus opens the focused bar.
-function useAccordion() {
-  const [openId, setOpenId] = useState(null)
+function useAccordion(initialId) {
+  const [openId, setOpenId] = useState(initialId)
+  // A tap focuses the bar before pointerup toggles it; skip that focus-open so the tap
+  // doesn't open and then immediately close it
+  const fromPointer = useRef(false)
 
   const groupHandlers = {
     onPointerLeave: (e) => e.pointerType === 'mouse' && setOpenId(null),
@@ -30,14 +36,18 @@ function useAccordion() {
 
   const itemHandlers = (id) => ({
     onPointerEnter: (e) => e.pointerType === 'mouse' && setOpenId(id),
+    onPointerDown: () => (fromPointer.current = true),
     onPointerUp: (e) => e.pointerType !== 'mouse' && setOpenId((cur) => (cur === id ? null : id)),
-    onFocus: () => setOpenId(id),
+    onFocus: () => {
+      if (!fromPointer.current) setOpenId(id)
+      fromPointer.current = false
+    },
   })
 
   return { openId, groupHandlers, itemHandlers }
 }
 
-function SeriesBar({ item, open, anyOpen, handlers }) {
+function SeriesBar({ item, open, anyOpen, handlers, size }) {
   const reduce = useReducedMotion()
 
   const growTransition = reduce ? { duration: m.base, ease: m.ease } : m.spring
@@ -62,6 +72,7 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
   }
   // Text grows with the bar on the same spring (scaled, so it never reflows)
   const textScale = { animate: { scale: open ? TEXT_GROW : 1 }, transition: growTransition }
+  const descScale = { animate: { scale: open ? size.descGrow : 1 }, transition: growTransition }
 
   return (
     <Box
@@ -73,7 +84,7 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
       initial={false}
       // The open bar grows taller; the others give up height and step in at the sides,
       // so the open one reads as growing both ways while the stack keeps its frame
-      animate={{ flexGrow: open ? EXPANDED_GROW : 1, marginInline: anyOpen && !open ? SIDE_INSET : 0 }}
+      animate={{ flexGrow: open ? size.grow : 1, marginInline: anyOpen && !open ? size.inset : 0 }}
       transition={growTransition}
       sx={(theme) => ({
         flexBasis: 0,
@@ -91,6 +102,9 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
         <Box
           component="img"
           src={item.image}
+          // Phones get the 800px copy
+          srcSet={`${item.imageSmall} 800w, ${item.image} 1800w`}
+          sizes="(max-width: 1023px) 100vw, 1360px"
           alt={item.imageAlt}
           sx={{
             position: 'absolute',
@@ -125,8 +139,8 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
       <Box
         sx={{
           position: 'relative',
-          height: HEADER_HEIGHT,
-          px: 5,
+          height: size.header,
+          px: { xs: `${CONTENT.left.xs}px`, md: 5 },
           display: 'flex',
           alignItems: 'center',
         }}
@@ -148,9 +162,9 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
         initial={false}
         animate={open ? 'visible' : 'hidden'}
         variants={content}
-        sx={{ position: 'absolute', top: HEADER_HEIGHT - 14, left: 40, width: CONTENT_WIDTH, color: 'common.white' }}
+        sx={{ position: 'absolute', top: size.header - 14, ...CONTENT, color: 'common.white' }}
       >
-        <Box component={motion.div} initial={false} {...textScale} sx={{ transformOrigin: 'left top' }}>
+        <Box component={motion.div} initial={false} {...descScale} sx={{ transformOrigin: 'left top' }}>
           <Typography component={motion.p} variant="body2" variants={pop}>
             {item.description}
           </Typography>
@@ -158,7 +172,7 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
         <Box
           component={motion.ul}
           variants={pop}
-          sx={{ m: 0, mt: 4, p: 0, display: 'flex', gap: 2, listStyle: 'none' }}
+          sx={{ m: 0, mt: 4, p: 0, display: 'flex', flexWrap: 'wrap', gap: 2, listStyle: 'none' }}
         >
           {item.notes.map((note) => (
             <Typography
@@ -179,7 +193,7 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
         initial={false}
         animate={open ? 'visible' : 'hidden'}
         variants={linkPop}
-        sx={{ position: 'absolute', right: 40, bottom: 24 }}
+        sx={{ position: 'absolute', right: { xs: 20, md: 40 }, bottom: { xs: 8, md: 14 } }}
       >
         <Link
           href="#"
@@ -187,7 +201,16 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
           aria-hidden={!open}
           onClick={(e) => e.preventDefault()}
           underline="hover"
-          sx={{ fontFamily: 'Assistant', fontWeight: 600, fontSize: 16, color: 'common.white' }}
+          // 44px tall so it's easy to tap
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 44,
+            fontFamily: 'Assistant',
+            fontWeight: 600,
+            fontSize: 16,
+            color: 'common.white',
+          }}
         >
           Shop series →
         </Link>
@@ -197,14 +220,20 @@ function SeriesBar({ item, open, anyOpen, handlers }) {
 }
 
 export default function SeriesCollage() {
-  const { openId, groupHandlers, itemHandlers } = useAccordion()
+  const compact = useCompact()
+  const size = compact ? SIZES.compact : SIZES.desktop
+  // On touch layouts the first bar starts open, so it's clear the bars hold more
+  const { openId, groupHandlers, itemHandlers } = useAccordion(compact ? series[0].id : null)
 
   return (
     <Container component="section" sx={{ pt: layout.sectionGap }}>
       <Typography variant="h3" component="h2" sx={{ mb: 3 }}>
         Shop Our Series
       </Typography>
-      <Box {...groupHandlers} sx={{ display: 'flex', flexDirection: 'column', gap: 3, height: ROW_HEIGHT }}>
+      <Box
+        {...groupHandlers}
+        sx={{ display: 'flex', flexDirection: 'column', gap: `${size.gap}px`, height: size.rowHeight }}
+      >
         {series.map((item) => (
           <SeriesBar
             key={item.id}
@@ -212,6 +241,7 @@ export default function SeriesCollage() {
             open={openId === item.id}
             anyOpen={openId !== null}
             handlers={itemHandlers(item.id)}
+            size={size}
           />
         ))}
       </Box>

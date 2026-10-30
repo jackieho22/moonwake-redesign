@@ -35,7 +35,12 @@ function wake({ cx, y, lengths, thickness = 10, gap = 22, lean = 0 }) {
 // Clusters avoid the heading (top left) and mostly sit where the cards leave gaps.
 const groups = [
   // Beside the heading, above the cards
-  { tone: 'light', drift: 18, duration: 28, paths: wake({ cx: 1560, y: 64, lengths: [560, 450, 340, 220, 80], lean: 14 }) },
+  {
+    tone: 'light',
+    drift: 18,
+    duration: 28,
+    paths: wake({ cx: 1560, y: 64, lengths: [560, 450, 340, 220, 80], lean: 14 }),
+  },
   // One long calm line through the card row, seen between the cards
   { tone: 'dark', drift: 24, duration: 34, paths: [streak(260, 372, 1880, 12)] },
   // Under the cards
@@ -50,7 +55,8 @@ const tones = {
   dark: { fill: colors.navy, opacity: 0.07 },
 }
 
-export default function WakeWaves({ sx }) {
+// `scale` shrinks the streaks (e.g. 0.6 on phones) without stretching them.
+export default function WakeWaves({ scale = 1, sx }) {
   const reduce = useReducedMotion()
 
   return (
@@ -62,11 +68,11 @@ export default function WakeWaves({ sx }) {
       ]}
     >
       <svg
-        width="100%"
-        height="100%"
+        width={`${100 / scale}%`}
+        height={`${100 / scale}%`}
         viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`}
         preserveAspectRatio="xMidYMid slice"
-        style={{ display: 'block' }}
+        style={{ display: 'block', transform: `scale(${scale})`, transformOrigin: '0 0' }}
       >
         {groups.map(({ tone, drift, duration, paths }, i) => (
           <motion.g

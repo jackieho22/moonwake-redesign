@@ -3,6 +3,7 @@ import CtaButton from './common/CtaButton'
 import Container from './common/Container'
 import Photo from './common/Photo'
 import cafePhoto from '../assets/photos/cafe.webp'
+import cafePhotoSmall from '../assets/photos/cafe-700.webp'
 import { layout } from '../theme/tokens'
 
 export default function FindOurCafe() {
@@ -11,10 +12,12 @@ export default function FindOurCafe() {
       component="section"
       sx={{
         pt: `calc(${layout.sectionGap} - 14px)`,
-        pb: `calc(${layout.sectionGap} + 94px)`,
+        pb: { xs: layout.sectionGap, md: `calc(${layout.sectionGap} + 94px)` },
         display: 'grid',
-        // Mirrors Join the Moonwake Family so the two photos share an edge rhythm
-        gridTemplateColumns: '360px 1fr',
+        // Mirrors Join the Moonwake Family so the two photos share an edge rhythm.
+        // Stacked (copy, then photo) on phones and tablets
+        gridTemplateColumns: { xs: '1fr', md: '360px 1fr' },
+        rowGap: 5,
         alignItems: 'center',
         columnGap: 6,
       }}
@@ -30,6 +33,8 @@ export default function FindOurCafe() {
       </Box>
       <Photo
         src={cafePhoto}
+        srcSet={`${cafePhotoSmall} 700w, ${cafePhoto} 1300w`}
+        sizes="(max-width: 1023px) 100vw, 940px"
         alt="Two lattes with leaf art on a concrete counter at the Moonwake cafe"
         // Portrait photo in a landscape frame: centre on the two cups
         position="center 70%"

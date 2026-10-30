@@ -23,9 +23,12 @@ export default function AnswerCard({ label, selected, onSelect }) {
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        width: ANSWER_WIDTH,
-        height: 64,
+        width: { xs: '100%', sm: ANSWER_WIDTH },
+        // Grows if a long answer wraps on a phone
+        minHeight: 64,
+        py: 2,
         pl: 3,
+        pr: 3,
         border: 0,
         borderRadius: `${theme.shape.borderRadius}px`,
         bgcolor: selected ? 'brand.sandDeep' : 'brand.stone',
@@ -33,7 +36,7 @@ export default function AnswerCard({ label, selected, onSelect }) {
         textAlign: 'left',
         cursor: 'pointer',
         transition: 'background-color 250ms ease, color 250ms ease, box-shadow 250ms ease',
-        '&:hover': { boxShadow: theme.customShadows.card },
+        '@media (hover: hover)': { '&:hover': { boxShadow: theme.customShadows.card } },
         '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 3 },
       })}
     >
@@ -61,7 +64,7 @@ export default function AnswerCard({ label, selected, onSelect }) {
           />
         </svg>
       </Box>
-      <Typography component="span" sx={{ fontFamily: fonts.ui, fontSize: 20, lineHeight: '24px' }}>
+      <Typography component="span" sx={{ fontFamily: fonts.ui, fontSize: { xs: 18, sm: 20 }, lineHeight: '24px' }}>
         {label}
       </Typography>
     </Box>

@@ -7,7 +7,12 @@ export default function Container({ sx, ...props }) {
     <Box
       {...props}
       sx={[
-        { width: '100%', maxWidth: layout.content + 2 * layout.gutter, mx: 'auto', px: `${layout.gutter}px` },
+        {
+          width: '100%',
+          maxWidth: layout.content + 2 * layout.gutter,
+          mx: 'auto',
+          px: { xs: `${layout.gutterPhone}px`, sm: `${layout.gutterTablet}px`, md: `${layout.gutter}px` },
+        },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     />

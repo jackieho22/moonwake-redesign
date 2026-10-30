@@ -12,8 +12,10 @@ export default function JoinFamily() {
       sx={{
         pt: `calc(${layout.sectionGap} - 14px)`,
         display: 'grid',
-        // The photo is capped at its native 678px so it stays sharp; the copy takes the rest
-        gridTemplateColumns: 'minmax(0, 678px) 1fr',
+        // The photo is capped at its native 678px so it stays sharp; the copy takes the rest.
+        // Stacked (photo, then copy) on phones and tablets
+        gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 678px) 1fr' },
+        rowGap: 5,
         alignItems: 'center',
         columnGap: 6,
       }}
@@ -23,7 +25,7 @@ export default function JoinFamily() {
         alt="Two members of the Moonwake team smiling inside the cafe"
         // Keep both faces clear of the top edge
         position="center 30%"
-        sx={{ width: '100%', aspectRatio: '3 / 2' }}
+        sx={{ width: '100%', maxWidth: 678, aspectRatio: '3 / 2' }}
       />
       <Box sx={{ maxWidth: 360 }}>
         <Typography variant="h2" sx={{ maxWidth: 292 }}>

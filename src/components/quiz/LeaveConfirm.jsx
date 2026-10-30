@@ -34,8 +34,8 @@ export default function LeaveConfirm({ onStay, onLeave }) {
         transition={m.spring}
         onClick={(e) => e.stopPropagation()}
         sx={(theme) => ({
-          width: 440,
-          p: 5,
+          width: { xs: 'calc(100% - 40px)', sm: 440 },
+          p: { xs: 4, sm: 5 },
           textAlign: 'center',
           bgcolor: 'background.paper',
           borderRadius: `${theme.shape.borderRadius}px`,
@@ -49,10 +49,10 @@ export default function LeaveConfirm({ onStay, onLeave }) {
           your answers so far won’t be saved.
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 5 }}>
-          <CtaButton autoFocus onClick={onStay} sx={{ width: 160 }}>
+          <CtaButton autoFocus onClick={onStay} sx={{ width: 160, flexShrink: 1 }}>
             keep going
           </CtaButton>
-          <CtaButton onClick={onLeave} sx={{ width: 160 }}>
+          <CtaButton onClick={onLeave} sx={{ width: 160, flexShrink: 1 }}>
             leave
           </CtaButton>
         </Box>

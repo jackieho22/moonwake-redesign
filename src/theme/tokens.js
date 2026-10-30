@@ -34,12 +34,19 @@ export const shadows = {
 
 export const layout = {
   headerHeight: 74,
-  // Disclaimer strip above the header (ConceptNotice)
+  headerHeightCompact: 60, // below the md breakpoint
+  // Disclaimer strip above the header (ConceptNotice); wraps to two lines on phones
   noticeHeight: 26,
+  noticeHeightPhone: 40,
+  // Live heights as CSS variables (set per breakpoint in theme.js), for anything
+  // positioned under the fixed header
+  vars: { notice: 'var(--notice-h)', header: 'var(--header-h)' },
   // Shared content frame (see common/Container): 1360 of content plus a 40px gutter
   // each side, so it fills a 1440 screen edge to gutter and stays 1360 wider than that
   content: 1360,
   gutter: 40,
+  gutterTablet: 32,
+  gutterPhone: 20,
   // One spacing token between every section; grows with the viewport
   // (~151px at 1440, capped at 176px on wide screens)
   sectionGap: 'clamp(96px, 10.5vw, 176px)',

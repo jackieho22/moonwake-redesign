@@ -8,6 +8,7 @@ import wordmark from '../assets/brand/wordmark.png'
 import searchIcon from '../assets/brand/icon-search.svg'
 import profileIcon from '../assets/brand/icon-profile.svg'
 import bagIcon from '../assets/brand/icon-bag.png'
+import MobileMenu from './MobileMenu'
 
 const navItems = [
   { label: 'Shop', menu: shopMenu },
@@ -17,9 +18,10 @@ const navItems = [
   { label: 'Info', menu: aboutMenu },
 ]
 
+// `desktop` actions move into the mobile menu below the md breakpoint; the cart always stays
 const actions = [
-  { label: 'Search', src: searchIcon, width: 33, height: 33 },
-  { label: 'Account', src: profileIcon, width: 25, height: 32 },
+  { label: 'Search', src: searchIcon, width: 33, height: 33, desktop: true },
+  { label: 'Account', src: profileIcon, width: 25, height: 32, desktop: true },
   { label: 'Cart', src: bagIcon, width: 40, height: 40 },
 ]
 
@@ -172,50 +174,81 @@ export default function SiteHeader() {
   }
 
   return (
-    <AppBar position="fixed" color="primary" sx={{ top: layout.noticeHeight }}>
+    <AppBar position="fixed" color="primary" sx={{ top: layout.vars.notice }}>
       <Toolbar
         disableGutters
-        sx={{ height: layout.headerHeight, minHeight: `${layout.headerHeight}px !important`, px: 5 }}
+        sx={{
+          height: layout.vars.header,
+          minHeight: `${layout.vars.header} !important`,
+          px: { xs: `${layout.gutterPhone}px`, sm: `${layout.gutterTablet}px`, md: 5 },
+        }}
       >
-        <Box
-          component="nav"
-          aria-label="Main"
-          onPointerLeave={() => setHovered(null)}
-          onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHovered(null)}
-          onKeyDown={onKeyDown}
-          sx={{ display: 'flex', gap: 5, flex: 1 }}
-        >
-          {navItems.map(({ label, menu }) => (
-            <NavItem
-              key={label}
-              label={label}
-              menu={menu}
-              active={hovered === label}
-              onActivate={() => setHovered(label)}
-            />
-          ))}
+        {/* Menu icon (phones/tablets) or the nav (desktop). flex: 1 on both sides keeps the logo centred */}
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+            <MobileMenu items={navItems} />
+          </Box>
+          <Box
+            component="nav"
+            aria-label="Main"
+            onPointerLeave={() => setHovered(null)}
+            onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHovered(null)}
+            onKeyDown={onKeyDown}
+            sx={{ display: { xs: 'none', md: 'flex' }, gap: 5 }}
+          >
+            {navItems.map(({ label, menu }) => (
+              <NavItem
+                key={label}
+                label={label}
+                menu={menu}
+                active={hovered === label}
+                onActivate={() => setHovered(label)}
+              />
+            ))}
+          </Box>
         </Box>
 
         <Box
           aria-label="Moonwake Coffee Roasters"
           role="img"
-          sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          sx={{ display: 'flex', alignItems: 'center', gap: { xs: '6px', md: '10px' } }}
         >
-          <Box component="img" src={symbol} alt="" sx={{ width: 82, height: 48, objectFit: 'cover' }} />
-          <Box component="img" src={wordmark} alt="" sx={{ width: 187, height: 38, objectFit: 'cover' }} />
+          <Box
+            component="img"
+            src={symbol}
+            alt=""
+            sx={{ width: { xs: 52, md: 82 }, height: { xs: 30, md: 48 }, objectFit: 'cover' }}
+          />
+          <Box
+            component="img"
+            src={wordmark}
+            alt=""
+            sx={{ width: { xs: 118, md: 187 }, height: { xs: 24, md: 38 }, objectFit: 'cover' }}
+          />
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '33px', flex: 1 }}>
-          {actions.map(({ label, src, width, height }) => (
+          {actions.map(({ label, src, width, height, desktop }) => (
             <ButtonBase
               key={label}
               aria-label={label}
               sx={{
+                display: desktop ? { xs: 'none', md: 'inline-flex' } : 'inline-flex',
+                // At least 44×44 to tap on touch screens
+                minWidth: { xs: 44, md: 0 },
+                minHeight: { xs: 44, md: 0 },
                 transition: 'opacity 200ms ease, transform 200ms ease',
-                '&:hover': { opacity: 0.75, transform: 'translateY(-1px)' },
+                '@media (hover: hover)': { '&:hover': { opacity: 0.75, transform: 'translateY(-1px)' } },
               }}
             >
-              <img src={src} alt="" width={width} height={height} />
+              <Box
+                component="img"
+                src={src}
+                alt=""
+                width={width}
+                height={height}
+                sx={{ width: { xs: width * 0.8, md: width }, height: 'auto' }}
+              />
             </ButtonBase>
           ))}
         </Box>

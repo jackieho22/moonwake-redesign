@@ -19,17 +19,26 @@ const squareButton = (size) => ({
   color: 'primary.main',
   border: '1px solid transparent',
   transition: 'background-color 200ms ease, color 200ms ease, border-color 200ms ease',
-  '&:hover, &.Mui-focusVisible': {
+  '&.Mui-focusVisible, &:active': {
     bgcolor: 'primary.main',
     color: 'common.white',
     borderColor: 'common.white',
+  },
+  '@media (hover: hover)': {
+    '&:hover': { bgcolor: 'primary.main', color: 'common.white', borderColor: 'common.white' },
   },
 })
 
 function Arrow({ up }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden style={{ rotate: up ? '-90deg' : '0deg' }}>
-      <path d="M3 9h12M10 4l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M3 9h12M10 4l5 5-5 5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -52,9 +61,10 @@ const socials = [
   },
 ]
 
-function Column({ title, children, width }) {
+// Phones and tablets: Shop and About sit side by side; `wide` columns span the full row
+function Column({ title, children, width, wide }) {
   return (
-    <Box sx={{ width }}>
+    <Box sx={{ width: { xs: 'auto', md: width }, gridColumn: wide ? '1 / -1' : undefined }}>
       <Typography sx={{ lineHeight: '50px', mb: 2 }}>{title}</Typography>
       {children}
     </Box>
@@ -65,7 +75,13 @@ function LinkList({ items }) {
   return (
     <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
       {items.map((item) => (
-        <Typography component="li" variant="caption" key={item} sx={{ display: 'block' }}>
+        // Taller rows on touch screens for comfortable tapping
+        <Typography
+          component="li"
+          variant="caption"
+          key={item}
+          sx={{ display: 'block', lineHeight: { xs: '40px', md: '30px' } }}
+        >
           {item}
         </Typography>
       ))}
@@ -82,23 +98,49 @@ export default function SiteFooter() {
         color: 'brand.paper',
         borderTopLeftRadius: theme.shape.borderRadius,
         borderTopRightRadius: theme.shape.borderRadius,
-        pt: '82px',
+        pt: { xs: '48px', md: '82px' },
         pb: 6,
       })}
     >
       <Container>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', pl: '2px' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: '17px' }} role="img" aria-label="Moonwake Coffee Roasters">
-            <Box component="img" src={symbol} alt="" sx={{ width: 209, height: 122, objectFit: 'cover' }} />
-            <Box component="img" src={wordmark} alt="" sx={{ width: 439, height: 90, objectFit: 'cover' }} />
+        {/* Logo above the signup form on phones and tablets, everything left-aligned */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: { xs: 5, md: 0 },
+            pl: '2px',
+          }}
+        >
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', mt: { xs: 0, md: '17px' } }}
+            role="img"
+            aria-label="Moonwake Coffee Roasters"
+          >
+            <Box
+              component="img"
+              src={symbol}
+              alt=""
+              sx={{ width: { xs: 90, md: 209 }, height: { xs: 52, md: 122 }, objectFit: 'cover' }}
+            />
+            <Box
+              component="img"
+              src={wordmark}
+              alt=""
+              sx={{ width: { xs: 190, md: 439 }, height: { xs: 39, md: 90 }, objectFit: 'cover' }}
+            />
           </Box>
 
-          <Box component="form" onSubmit={(e) => e.preventDefault()} sx={{ width: 362 }}>
-            <Typography sx={{ fontSize: 24, lineHeight: '50px' }}>Get 10% Off your first order!</Typography>
+          <Box component="form" onSubmit={(e) => e.preventDefault()} sx={{ width: { xs: '100%', md: 362 } }}>
+            <Typography sx={{ fontSize: { xs: 22, md: 24 }, lineHeight: { xs: 1.4, md: '50px' } }}>
+              Get 10% Off your first order!
+            </Typography>
             <Typography sx={{ lineHeight: '30px', maxWidth: 360 }}>
               Also get the latest updates on new and exclusive product releases and more
             </Typography>
-            <Box sx={{ display: 'flex', gap: 4, mt: 5 }}>
+            <Box sx={{ display: 'flex', gap: 4, mt: { xs: 4, md: 5 } }}>
               <InputBase
                 type="email"
                 placeholder="email address"
@@ -112,17 +154,23 @@ export default function SiteFooter() {
                   color: 'text.primary',
                 }}
               />
-              <ButtonBase component={motion.button} {...pressable} type="submit" aria-label="Sign up" sx={squareButton(52)}>
+              <ButtonBase
+                component={motion.button}
+                {...pressable}
+                type="submit"
+                aria-label="Sign up"
+                sx={squareButton(52)}
+              >
                 <Arrow />
               </ButtonBase>
             </Box>
           </Box>
         </Box>
 
-        <Divider sx={{ mt: '119px', mb: '38px', borderColor: colors.paper }} />
+        <Divider sx={{ mt: { xs: 6, md: '119px' }, mb: { xs: 4, md: '38px' }, borderColor: colors.paper }} />
 
-        <Box sx={{ display: 'flex' }}>
-          <Column title="Socials" width={286}>
+        <Box sx={{ display: { xs: 'grid', md: 'flex' }, gridTemplateColumns: '1fr 1fr', columnGap: 4, rowGap: 5 }}>
+          <Column title="Socials" width={286} wide>
             <Box sx={{ display: 'flex', gap: '22px' }}>
               {socials.map(({ name, icon }) => (
                 <ButtonBase
@@ -162,7 +210,7 @@ export default function SiteFooter() {
           <Column title="About" width={286}>
             <LinkList items={aboutLinks} />
           </Column>
-          <Column title="Address">
+          <Column title="Address" wide>
             <Typography sx={{ fontWeight: 600, lineHeight: '30px' }}>San Jose</Typography>
             <Typography sx={{ lineHeight: '30px' }}>1412 saratoga avenue</Typography>
             <Typography sx={{ lineHeight: '30px' }}>san jose, ca</Typography>
@@ -172,7 +220,16 @@ export default function SiteFooter() {
           </Column>
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 6 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column-reverse', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', md: 'center' },
+            gap: { xs: 4, md: 0 },
+            mt: 6,
+          }}
+        >
           <Typography variant="caption">© 2026, Moonwake Coffee Roasters Powered by Shopify</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Typography>Back To Top</Typography>
@@ -181,7 +238,7 @@ export default function SiteFooter() {
               {...pressable}
               aria-label="Back to top"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              sx={squareButton(41)}
+              sx={squareButton(44)}
             >
               <Arrow up />
             </ButtonBase>

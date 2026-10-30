@@ -12,8 +12,8 @@ export default function Hero() {
       sx={(theme) => ({
         position: 'relative',
         height: layout.heroHeight,
-        // Shorter on phones so the barista prompt is close below
-        [theme.breakpoints.down('sm')]: { height: '70vh' },
+        // Shorter on phones and tablets so the barista prompt is close below
+        [theme.breakpoints.down('md')]: { height: '70vh', minHeight: 460 },
         overflow: 'hidden',
         bgcolor: 'brand.placeholder',
       })}
@@ -28,9 +28,20 @@ export default function Hero() {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          // Figma flips the photo horizontally; 35% keeps both the kettle and the carafe in frame
-          objectPosition: 'center 35%',
+          // Figma flips the photo horizontally; 35% keeps both the kettle and the carafe in frame.
+          // On narrow screens the crop is mostly sides, so shift toward the pour-over
+          objectPosition: { xs: '58% 35%', md: 'center 35%' },
           transform: 'scaleX(-1)',
+        }}
+      />
+      {/* Phones/tablets: the text sits over the bright carafe, so darken the bottom of the photo */}
+      <Box
+        aria-hidden
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(4, 28, 44, 0) 40%, rgba(4, 28, 44, 0.65) 100%)',
         }}
       />
       <Container
@@ -38,10 +49,13 @@ export default function Hero() {
           position: 'relative',
           height: '100%',
           display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
+          // Phones/tablets: text and button stacked, left-aligned at the bottom
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'flex-end' },
+          justifyContent: { xs: 'flex-end', md: 'space-between' },
+          gap: { xs: 4, md: 0 },
           // Content sits in the lower third, leaving the photo room above
-          pb: 'clamp(56px, 9vh, 96px)',
+          pb: { xs: 5, md: 'clamp(56px, 9vh, 96px)' },
         }}
       >
         <Box
@@ -51,7 +65,10 @@ export default function Hero() {
           transition={{ duration: m.slow, ease: m.ease }}
           sx={{ color: 'common.white' }}
         >
-          <Typography variant="h1" sx={{ fontSize: 'clamp(48px, 4vw, 72px)' }}>
+          <Typography
+            variant="h1"
+            sx={{ fontSize: { xs: 'clamp(36px, 7vw + 10px, 52px)', md: 'clamp(48px, 4vw, 72px)' } }}
+          >
             sip and reflect.
           </Typography>
           <Typography sx={{ mt: 2, maxWidth: 363, fontSize: 'clamp(16px, 1.15vw, 20px)', lineHeight: 1.55 }}>

@@ -11,13 +11,22 @@ export default function QuizHeading({ id, focusOnMount, height = 245, children }
   }, [focusOnMount])
 
   return (
-    <Box sx={{ height, px: '80px', display: 'flex', alignItems: 'center' }}>
+    // Phones: height follows the text so the answers sit right below it
+    <Box
+      sx={{
+        height: { xs: 'auto', sm: height },
+        px: { xs: '20px', sm: '80px' },
+        py: { xs: 4, sm: 0 },
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
       <Typography
         ref={ref}
         id={id}
         tabIndex={-1}
         variant="h2"
-        sx={{ fontSize: 40, lineHeight: '48px', maxWidth: 523, outline: 'none' }}
+        sx={{ fontSize: { xs: 28, sm: 40 }, lineHeight: { xs: '34px', sm: '48px' }, maxWidth: 523, outline: 'none' }}
       >
         {children}
       </Typography>

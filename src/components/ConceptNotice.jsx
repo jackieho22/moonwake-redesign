@@ -18,14 +18,18 @@ export default function ConceptNotice() {
         right: 0,
         // Above the header (AppBar is 1100), below the quiz dialog (1300)
         zIndex: 1101,
-        height: layout.noticeHeight,
+        height: layout.vars.notice,
+        px: `${layout.gutterPhone}px`,
+        textAlign: 'center',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         bgcolor: 'brand.slate',
       }}
     >
-      <Typography sx={{ fontFamily: fonts.ui, fontSize: 12, letterSpacing: 0.4, color: 'common.white' }}>
+      <Typography
+        sx={{ fontFamily: fonts.ui, fontSize: 12, lineHeight: '16px', letterSpacing: 0.4, color: 'common.white' }}
+      >
         Concept redesign. Not affiliated with Moonwake Coffee Roasters.
       </Typography>
     </Box>

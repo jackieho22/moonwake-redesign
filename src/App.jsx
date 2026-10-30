@@ -14,10 +14,11 @@ import { layout } from './theme/tokens'
 
 export default function App() {
   return (
-    <Box sx={{ minWidth: 1280 }}>
+    // `clip` is a safety net against stray horizontal overflow (it doesn't create a scroll container)
+    <Box sx={{ overflowX: 'clip' }}>
       <ConceptNotice />
       <SiteHeader />
-      <Box component="main" sx={{ pt: `${layout.noticeHeight + layout.headerHeight}px` }}>
+      <Box component="main" sx={{ pt: `calc(${layout.vars.notice} + ${layout.vars.header})` }}>
         <Hero />
         <NoiseBackground>
           <BaristaPrompt />

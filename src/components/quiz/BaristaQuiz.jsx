@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, ButtonBase, Modal } from '@mui/material'
+import { Box, ButtonBase, Modal, useMediaQuery } from '@mui/material'
 import { AnimatePresence, motion, useIsPresent } from 'motion/react'
 import useFitScale from '../../hooks/useFitScale'
 import QuestionStep from './QuestionStep'
@@ -12,7 +12,8 @@ import { fonts, motion as m, pressable } from '../../theme/tokens'
 import symbol from '../../assets/brand/symbol.png'
 import wordmark from '../../assets/brand/wordmark.png'
 
-// Panel size from the Figma frames (16:136, 20:177)
+// Panel size from the Figma frames (16:136, 20:177). On phones the panel goes full-screen instead
+// and its contents flow (and scroll) rather than sitting at fixed positions.
 const PANEL = { width: 792, height: 1055 }
 const RESULT_SLOTS = 3
 // Long enough to see the bounce and tick land before the next step slides in
@@ -21,7 +22,11 @@ const ADVANCE_DELAY = 450
 // Rotation survives closing and reopening the quiz (resets on page reload).
 let round = 0
 let lastSet = ''
-const setKey = (picks) => picks.map((c) => c.id).sort().join()
+const setKey = (picks) =>
+  picks
+    .map((c) => c.id)
+    .sort()
+    .join()
 
 // Rank the whole catalog by the answers, then rotate so each finish shows a new set of 3.
 function nextPicks(answers) {
@@ -40,7 +45,7 @@ const slide = {
 }
 
 // One step of the quiz. Goes inert while sliding out so it can't take a stray click.
-function Slide({ direction, children }) {
+function Slide({ direction, phone, children }) {
   const isPresent = useIsPresent()
 
   return (
@@ -53,7 +58,8 @@ function Slide({ direction, children }) {
       animate="center"
       exit="exit"
       transition={{ duration: 0.45, ease: m.ease }}
-      sx={{ position: 'absolute', inset: 0 }}
+      // On phones a long step scrolls inside the panel; close and back stay pinned above it
+      sx={{ position: 'absolute', inset: 0, ...(phone && { overflowY: 'auto', pb: 5 }) }}
     >
       {children}
     </Box>
@@ -68,7 +74,7 @@ function CloseIcon() {
   )
 }
 
-function ProgressBar({ value }) {
+function ProgressBar({ value, phone }) {
   return (
     <Box
       role="progressbar"
@@ -76,7 +82,11 @@ function ProgressBar({ value }) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(value * 100)}
-      sx={{ position: 'absolute', top: 45, left: 80, width: 632, height: 24, bgcolor: 'brand.mist' }}
+      sx={
+        phone
+          ? { position: 'absolute', top: 26, left: 20, right: 68, height: 12, bgcolor: 'brand.mist' }
+          : { position: 'absolute', top: 45, left: 80, width: 632, height: 24, bgcolor: 'brand.mist' }
+      }
     >
       <Box
         component={motion.div}
@@ -97,7 +107,9 @@ function QuizDialog({ onClose }) {
   const [confirming, setConfirming] = useState(false)
   const [navigated, setNavigated] = useState(false) // move focus only after the first step change
   const advanceTimer = useRef(null)
-  const scale = useFitScale(PANEL.height, 24)
+  const phone = useMediaQuery((theme) => theme.breakpoints.down('sm'), { noSsr: true })
+  const fitScale = useFitScale(PANEL.width, PANEL.height, 24)
+  const scale = phone ? 1 : fitScale
 
   useEffect(() => () => clearTimeout(advanceTimer.current), [])
 
@@ -165,18 +177,26 @@ function QuizDialog({ onClose }) {
             exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: m.fast, ease: m.ease } }}
             sx={(theme) => ({
               position: 'relative',
-              width: PANEL.width,
-              height: PANEL.height,
+              width: phone ? '100vw' : PANEL.width,
+              // dvh tracks the visible height as the phone browser's bars show and hide
+              height: phone ? '100dvh' : PANEL.height,
               overflow: 'hidden',
               bgcolor: 'background.paper',
-              borderRadius: `${theme.shape.borderRadius}px`,
+              borderRadius: phone ? 0 : `${theme.shape.borderRadius}px`,
               boxShadow: theme.customShadows.lifted,
             })}
           >
             <Box inert={confirming} sx={{ position: 'absolute', inset: 0 }}>
-              <Box sx={{ position: 'absolute', top: 69, left: 0, right: 0, height: 843 }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  ...(phone ? { top: 80, bottom: 0 } : { top: 69, height: 843 }),
+                }}
+              >
                 <AnimatePresence initial={false} custom={direction}>
-                  <Slide key={step} direction={direction}>
+                  <Slide key={step} direction={direction} phone={phone}>
                     {done ? (
                       <ResultsStep picks={picks} onRetake={retake} focusOnMount={navigated} />
                     ) : (
@@ -193,7 +213,7 @@ function QuizDialog({ onClose }) {
                 </AnimatePresence>
               </Box>
 
-              <ProgressBar value={progress} />
+              <ProgressBar value={progress} phone={phone} />
 
               <AnimatePresence>
                 {step > 0 && !done && (
@@ -205,8 +225,9 @@ function QuizDialog({ onClose }) {
                     onClick={back}
                     sx={{
                       position: 'absolute',
-                      top: 84,
-                      left: 80,
+                      top: phone ? 46 : 84,
+                      left: phone ? 20 : 80,
+                      minHeight: 44,
                       gap: 1,
                       fontFamily: fonts.ui,
                       fontSize: 16,
@@ -226,8 +247,8 @@ function QuizDialog({ onClose }) {
                 onClick={requestClose}
                 sx={{
                   position: 'absolute',
-                  top: 33,
-                  right: 20,
+                  top: phone ? 8 : 33,
+                  right: phone ? 8 : 20,
                   width: 48,
                   height: 48,
                   borderRadius: '50%',
@@ -243,11 +264,12 @@ function QuizDialog({ onClose }) {
                 role="img"
                 aria-label="Moonwake Coffee Roasters"
                 sx={{
+                  // No room for the logo on a phone screen
+                  display: phone ? 'none' : 'flex',
                   position: 'absolute',
                   top: 912,
                   left: '50%',
                   translate: '-50% 0',
-                  display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: 1,

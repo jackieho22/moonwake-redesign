@@ -21,6 +21,8 @@ const CARD_TOP = 333
 // fanning down (which reaches ~50px under the card)
 const GAP_ABOVE = 84
 const GAP_BELOW = 76
+// Phones: the three cards (and their fruit) shrink so the fanned fruit stays on screen
+const PHONE_CAROUSEL_SCALE = 0.82
 
 function Chevron({ left }) {
   return (
@@ -156,9 +158,11 @@ export default function ResultsStep({ picks, onRetake, focusOnMount }) {
 
       {/* Fixed-height band, copy pinned to its bottom: the card stays put however long the note runs */}
       <Box
+        // Phones: the band follows the text (the step scrolls), keeping the gap for the fruit
         sx={{
-          height: CARD_TOP - HEADING_HEIGHT,
-          pb: `${GAP_ABOVE}px`,
+          height: { xs: 'auto', sm: CARD_TOP - HEADING_HEIGHT },
+          px: { xs: '20px', sm: 0 },
+          pb: { xs: '64px', sm: `${GAP_ABOVE}px` },
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-end',
@@ -177,16 +181,19 @@ export default function ResultsStep({ picks, onRetake, focusOnMount }) {
         </AnimatePresence>
       </Box>
 
-      <Box sx={{ position: 'relative', flexShrink: 0, width: 550, height: CARD }}>
-        {picks.map((pick, i) => (
-          <ResultCard
-            key={`${i}-${pick.id}`}
-            coffee={pick}
-            // Works for the 3 slots: the one after the current pick peeks right, the one before peeks left
-            offset={((i - index + count + 1) % count) - 1}
-            fanned={fanned}
-          />
-        ))}
+      <Box sx={{ position: 'relative', flexShrink: 0, width: { xs: 'calc(100% - 24px)', sm: 550 }, height: CARD }}>
+        {/* Only the cards scale down on phones; the arrows keep their 48px tap size */}
+        <Box sx={{ position: 'absolute', inset: 0, scale: { xs: PHONE_CAROUSEL_SCALE, sm: 1 } }}>
+          {picks.map((pick, i) => (
+            <ResultCard
+              key={`${i}-${pick.id}`}
+              coffee={pick}
+              // Works for the 3 slots: the one after the current pick peeks right, the one before peeks left
+              offset={((i - index + count + 1) % count) - 1}
+              fanned={fanned}
+            />
+          ))}
+        </Box>
         {count > 1 && (
           <>
             <ArrowButton left onClick={() => go(-1)} />
@@ -204,7 +211,7 @@ export default function ResultsStep({ picks, onRetake, focusOnMount }) {
             fontFamily: fonts.ui,
             fontSize: 16,
             lineHeight: '20px',
-            mt: `${GAP_BELOW}px`,
+            mt: { xs: '48px', sm: `${GAP_BELOW}px` },
           }}
         >
           {coffee.series} | {coffee.price}
@@ -220,6 +227,7 @@ export default function ResultsStep({ picks, onRetake, focusOnMount }) {
         underline="hover"
         sx={{
           mt: 3,
+          minHeight: 44,
           fontFamily: fonts.ui,
           fontSize: 14,
           color: 'text.secondary',

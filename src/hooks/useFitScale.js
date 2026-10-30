@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 
-const fit = (height, margin) => Math.min(1, (window.innerHeight - margin * 2) / height)
+const fit = (width, height, margin) =>
+  Math.min(1, (window.innerWidth - margin * 2) / width, (window.innerHeight - margin * 2) / height)
 
-// Shrinks a fixed-height panel to fit short viewports without reflowing its layout.
-export default function useFitScale(height, margin = 0) {
-  const [scale, setScale] = useState(() => fit(height, margin))
+// Shrinks a fixed-size panel to fit small viewports (height or width) without reflowing its layout.
+export default function useFitScale(width, height, margin = 0) {
+  const [scale, setScale] = useState(() => fit(width, height, margin))
 
   useEffect(() => {
-    const onResize = () => setScale(fit(height, margin))
+    const onResize = () => setScale(fit(width, height, margin))
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
-  }, [height, margin])
+  }, [width, height, margin])
 
   return scale
 }
