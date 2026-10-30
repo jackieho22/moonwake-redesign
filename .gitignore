@@ -1,0 +1,41 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment files (secrets never go in the repo)
+.env
+.env.*
+!.env.example
+
+# Vercel CLI link folder
+.vercel
+
+# OS clutter
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Original, full-size photos stay local; the site only uses the resized .webp copies
+src/assets/photos/*
+!src/assets/photos/*.webp
